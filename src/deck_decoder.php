@@ -140,17 +140,15 @@ class CArtifactDeckDecoder
 		$nTotalCardBytes = $nTotalBytes - $nStringLength;
 
 		//grab the string size
-		{
-			$nComputedChecksum = 0;
-			for ($i = $nCurrentByteIndex; $i <= $nTotalCardBytes; $i++) {
-                $nComputedChecksum += $deckBytes[$i];
-            }
+        $nComputedChecksum = 0;
+        for ($i = $nCurrentByteIndex; $i <= $nTotalCardBytes; $i++) {
+            $nComputedChecksum += $deckBytes[$i];
+        }
 
-			$masked = ($nComputedChecksum & 0xFF);
-			if ($nChecksum != $masked) {
-                return false;
-            }
-		}
+        $masked = ($nComputedChecksum & 0xFF);
+        if ($nChecksum != $masked) {
+            return false;
+        }
 
 		//read in our hero count (part of the bits are in the version, but we can overflow bits here
 		$nNumHeroes = 0;
@@ -160,18 +158,16 @@ class CArtifactDeckDecoder
 
 		//now read in the heroes
 		$heroes = [];
-		{
-			$nPrevCardBase = 0;
-			for ($nCurrHero = 0; $nCurrHero < $nNumHeroes; $nCurrHero++) {
-				$nHeroTurn = 0;
-				$nHeroCardID = 0;
-				if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nPrevCardBase, $nHeroTurn, $nHeroCardID)) {
-					return false;
-				}
+        $nPrevCardBase = 0;
+        for ($nCurrHero = 0; $nCurrHero < $nNumHeroes; $nCurrHero++) {
+            $nHeroTurn = 0;
+            $nHeroCardID = 0;
+            if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nPrevCardBase, $nHeroTurn, $nHeroCardID)) {
+                return false;
+            }
 
-				array_push( $heroes, ["id" => $nHeroCardID, "turn" => $nHeroTurn]);
-			}
-		}
+            array_push( $heroes, ["id" => $nHeroCardID, "turn" => $nHeroTurn]);
+        }
 
 		$cards = [];
 		$nPrevCardBase = 0;
