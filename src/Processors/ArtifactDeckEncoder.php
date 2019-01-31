@@ -3,7 +3,7 @@
 require_once( 'commonutils.php' );
 
 // Basic Deck encoder
-class CArtifactDeckEncoder
+class ArtifactDeckEncoder
 {
 	public static $s_nCurrentVersion = 2;
 	private static $sm_rgchEncodedPrefix = "ADC";

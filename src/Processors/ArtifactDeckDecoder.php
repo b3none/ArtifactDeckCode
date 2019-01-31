@@ -1,6 +1,6 @@
 <?php
 
-class CArtifactDeckDecoder
+class ArtifactDeckDecoder
 {
 	const CURRENT_VERSION = 2;
 	private $sm_rgchEncodedPrefix = "ADC";
