@@ -2,6 +2,9 @@
 
 namespace ValveSoftware\ArtifactDeckCode\Processors;
 
+use ValveSoftware\ArtifactDeckCode\Models\CardModel;
+use ValveSoftware\ArtifactDeckCode\Models\HeroModel;
+
 class ArtifactDeckDecoder
 {
 	const CURRENT_VERSION = 2;
@@ -9,7 +12,7 @@ class ArtifactDeckDecoder
     /**
      * @var string
      */
-	private $sm_rgchEncodedPrefix = "ADC";
+	protected $sm_rgchEncodedPrefix = "ADC";
 
 	// returns ["heroes" => [id, turn], "cards" => [id, count], "name" => name]
 
@@ -27,9 +30,7 @@ class ArtifactDeckDecoder
             return null;
         }
 
-		$deck = $this->ParseDeckInternal($deckBytes);
-
-		return is_array($deck) ? $deck : null;
+		return $this->ParseDeckInternal($deckBytes);
 	}
 
     /**
@@ -98,7 +99,7 @@ class ArtifactDeckDecoder
 	}
 
 	//handles decoding a card that was serialized
-	protected function ReadSerializedCard( $data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID )
+	protected function ReadSerializedCard($data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID)
 	{
 		//end of the memory block?
 		if ($indexStart > $indexEnd) {
@@ -112,7 +113,7 @@ class ArtifactDeckDecoder
 
 		//read in the delta, which has 5 bits in the header, then additional bytes while the value is set
 		$nCardDelta = 0;
-		if (!$this->ReadVarEncodedUint32( $nHeader, 5, $data, $indexStart, $indexEnd, $nCardDelta)) {
+		if (!$this->ReadVarEncodedUint32($nHeader, 5, $data, $indexStart, $indexEnd, $nCardDelta)) {
             return null;
         }
 
@@ -184,7 +185,12 @@ class ArtifactDeckDecoder
                 return null;
             }
 
-            array_push( $heroes, ["id" => $nHeroCardID, "turn" => $nHeroTurn]);
+            $hero = new HeroModel();
+
+            $hero->setId($nHeroCardID);
+            $hero->setTurn($nHeroTurn);
+
+            $heroes[] = $hero;
         }
 
 		$cards = [];
@@ -197,7 +203,11 @@ class ArtifactDeckDecoder
                 return null;
             }
 
-			array_push( $cards, ["id" => $nCardID, "count" => $nCardCount]);
+            $card = new CardModel();
+			$card->setId($nCardID);
+			$card->setCount($nCardCount);
+
+			$cards[] = $card;
 		}
 
 		$name = "";
@@ -209,6 +219,10 @@ class ArtifactDeckDecoder
 			$name = strip_tags($name);
 		}
 
-		return ["heroes" => $heroes, "cards" => $cards, "name" => $name];
+		return [
+		    "heroes" => $heroes,
+            "cards" => $cards,
+            "name" => $name
+        ];
 	}
 };
