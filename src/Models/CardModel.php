@@ -22,7 +22,7 @@ class CardModel
      *
      * @param mixed $id
      */
-    public function setId($id)
+    public function setId($id): void
     {
         $this->id = $id;
     }
@@ -42,7 +42,7 @@ class CardModel
      *
      * @param mixed $count
      */
-    public function setCount($count)
+    public function setCount($count): void
     {
         $this->count = $count;
     }

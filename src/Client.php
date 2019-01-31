@@ -41,7 +41,7 @@ class Client
      */
     public function parseDeck(string $deckCode)
     {
-        return $this->artifactDeckDecoder->ParseDeck($deckCode);
+        return $this->artifactDeckDecoder->parseDeck($deckCode);
     }
 
     public function encodeDeck($deckContents)

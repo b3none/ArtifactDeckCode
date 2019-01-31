@@ -5,10 +5,19 @@ namespace ValveSoftware\ArtifactDeckCode\Processors;
 class ArtifactDeckDecoder
 {
 	const CURRENT_VERSION = 2;
+
+    /**
+     * @var string
+     */
 	private $sm_rgchEncodedPrefix = "ADC";
 
 	// returns ["heroes" => [id, turn], "cards" => [id, count], "name" => name]
-	public function ParseDeck(string $deckCode): ?array
+
+    /**
+     * @param string $deckCode
+     * @return array|null
+     */
+	public function parseDeck(string $deckCode): ?array
 	{
 		$deckBytes = $this->DecodeDeckString($deckCode);
 
@@ -17,10 +26,15 @@ class ArtifactDeckDecoder
         }
 
 		$deck = $this->ParseDeckInternal($deckBytes);
-		return $deck;
+
+		return is_array($deck) ? $deck : null;
 	}
 
-	public function RawDeckBytes(string $deckCode)
+    /**
+     * @param string $deckCode
+     * @return array|null
+     */
+	public function RawDeckBytes(string $deckCode): ?array 
 	{
 		return $this->DecodeDeckString($deckCode);
 	}
@@ -29,16 +43,14 @@ class ArtifactDeckDecoder
 	{
 		//check for prefix
 		if (substr($deckCode, 0, strlen($this->sm_rgchEncodedPrefix)) != $this->sm_rgchEncodedPrefix) {
-            return false;
+            return null;
         }
 
 		//strip prefix from deck code
 		$strNoPrefix = substr($deckCode, strlen($this->sm_rgchEncodedPrefix));
 
 		// deck strings are base64 but with url compatible strings, put the URL special chars back
-		$search = ['-', '_'];
-		$replace = ['/', '='];
-		$strNoPrefix = str_replace($search, $replace, $strNoPrefix);
+		$strNoPrefix = str_replace(['-', '_'], ['/', '='], $strNoPrefix);
 		$decoded = base64_decode($strNoPrefix);
 
 		return unpack("C*", $decoded);
@@ -65,7 +77,7 @@ class ArtifactDeckDecoder
 			while (1) {
 				//do we have more room?
 				if ($indexStart > $indexEnd) {
-                    return false;
+                    return null;
                 }
 
 				//read the bits from this next byte and see if we are done
@@ -86,7 +98,7 @@ class ArtifactDeckDecoder
 	{
 		//end of the memory block?
 		if ($indexStart > $indexEnd) {
-            return false;
+            return null;
         }
 
 		//header contains the count (2 bits), a continue flag, and 5 bits of offset data. If we have 11 for the count bits we have the count
@@ -97,7 +109,7 @@ class ArtifactDeckDecoder
 		//read in the delta, which has 5 bits in the header, then additional bytes while the value is set
 		$nCardDelta = 0;
 		if (!$this->ReadVarEncodedUint32( $nHeader, 5, $data, $indexStart, $indexEnd, $nCardDelta)) {
-            return false;
+            return null;
         }
 
 		$nOutCardID = $nPrevCardBase + $nCardDelta;
@@ -105,7 +117,7 @@ class ArtifactDeckDecoder
 		//now parse the count if we have an extended count
 		if ($bHasExtendedCount) {
 			if (!$this->ReadVarEncodedUint32(0, 0, $data, $indexStart, $indexEnd, $nOutCount)) {
-                return false;
+                return null;
             }
 		} else {
 			//the count is just the upper two bits + 1 (since we don't encode zero)
@@ -128,7 +140,7 @@ class ArtifactDeckDecoder
 		$nVersionAndHeroes = $deckBytes[$nCurrentByteIndex++];
 		$version = $nVersionAndHeroes >> 4;
 		if (self::CURRENT_VERSION != $version && $version != 1) {
-            return false;
+            return null;
         }
 
 		//do checksum check
@@ -149,13 +161,13 @@ class ArtifactDeckDecoder
 
         $masked = ($nComputedChecksum & 0xFF);
         if ($nChecksum != $masked) {
-            return false;
+            return null;
         }
 
 		//read in our hero count (part of the bits are in the version, but we can overflow bits here
 		$nNumHeroes = 0;
 		if (!$this->ReadVarEncodedUint32($nVersionAndHeroes, 3, $deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nNumHeroes)) {
-            return false;
+            return null;
         }
 
 		//now read in the heroes
@@ -165,7 +177,7 @@ class ArtifactDeckDecoder
             $nHeroTurn = 0;
             $nHeroCardID = 0;
             if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nPrevCardBase, $nHeroTurn, $nHeroCardID)) {
-                return false;
+                return null;
             }
 
             array_push( $heroes, ["id" => $nHeroCardID, "turn" => $nHeroTurn]);
@@ -178,7 +190,7 @@ class ArtifactDeckDecoder
 			$nCardCount = 0;
 			$nCardID = 0;
 			if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalBytes, $nPrevCardBase, $nCardCount, $nCardID)) {
-                return false;
+                return null;
             }
 
 			array_push( $cards, ["id" => $nCardID, "count" => $nCardCount]);

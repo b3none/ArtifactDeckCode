@@ -22,7 +22,7 @@ class HeroModel
      *
      * @param mixed $id
      */
-    public function setId($id)
+    public function setId($id): void
     {
         $this->id = $id;
     }
@@ -42,7 +42,7 @@ class HeroModel
      *
      * @param mixed $turn
      */
-    public function setTurn($turn)
+    public function setTurn($turn): void
     {
         $this->turn = $turn;
     }
