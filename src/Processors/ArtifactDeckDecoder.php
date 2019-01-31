@@ -14,6 +14,8 @@ class ArtifactDeckDecoder
 	// returns ["heroes" => [id, turn], "cards" => [id, count], "name" => name]
 
     /**
+     * Parse deck code
+     *
      * @param string $deckCode
      * @return array|null
      */
@@ -31,6 +33,8 @@ class ArtifactDeckDecoder
 	}
 
     /**
+     * Get raw deck bytes from deck code
+     *
      * @param string $deckCode
      * @return array|null
      */
@@ -39,7 +43,7 @@ class ArtifactDeckDecoder
 		return $this->DecodeDeckString($deckCode);
 	}
 
-	private function DecodeDeckString(string $deckCode)
+	protected function DecodeDeckString(string $deckCode)
 	{
 		//check for prefix
 		if (substr($deckCode, 0, strlen($this->sm_rgchEncodedPrefix)) != $this->sm_rgchEncodedPrefix) {
@@ -57,7 +61,7 @@ class ArtifactDeckDecoder
 	}
 
 	//reads out a var-int encoded block of bits, returns true if another chunk should follow
-	private function ReadBitsChunk($nChunk, $nNumBits, $nCurrShift, &$nOutBits)
+	protected function ReadBitsChunk($nChunk, $nNumBits, $nCurrShift, &$nOutBits)
 	{
 		$nContinueBit = (1 << $nNumBits);
 		$nNewBits = $nChunk & ($nContinueBit - 1);
@@ -66,7 +70,7 @@ class ArtifactDeckDecoder
 		return ($nChunk & $nContinueBit) != 0;
 	}
 
-	private function ReadVarEncodedUint32($nBaseValue, $nBaseBits, $data, &$indexStart, $indexEnd, &$outValue): bool
+	protected function ReadVarEncodedUint32($nBaseValue, $nBaseBits, $data, &$indexStart, $indexEnd, &$outValue): bool
 	{
 		$outValue = 0;
 
@@ -94,7 +98,7 @@ class ArtifactDeckDecoder
 	}
 
 	//handles decoding a card that was serialized
-	private function ReadSerializedCard( $data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID )
+	protected function ReadSerializedCard( $data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID )
 	{
 		//end of the memory block?
 		if ($indexStart > $indexEnd) {
@@ -131,7 +135,7 @@ class ArtifactDeckDecoder
 
 	// $deckBytes will be 1 indexed (due to unpack return value).  If you are using 0 based indexing
 	//	for your byte array, be sure to adjust appropriate below (see // 1 indexed)
-	private function ParseDeckInternal($deckBytes)
+	protected function ParseDeckInternal($deckBytes)
 	{
 		$nCurrentByteIndex = 1;
 		$nTotalBytes = count($deckBytes);
