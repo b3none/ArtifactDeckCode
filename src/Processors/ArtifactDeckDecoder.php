@@ -24,13 +24,13 @@ class ArtifactDeckDecoder
      */
 	public function parseDeck(string $deckCode): ?array
 	{
-		$deckBytes = $this->DecodeDeckString($deckCode);
+		$deckBytes = $this->decodeDeckString($deckCode);
 
 		if (!$deckBytes) {
             return null;
         }
 
-		return $this->ParseDeckInternal($deckBytes);
+		return $this->parseDeckInternal($deckBytes);
 	}
 
     /**
@@ -41,10 +41,16 @@ class ArtifactDeckDecoder
      */
 	public function getRawDeckBytes(string $deckCode): ?array
 	{
-		return $this->DecodeDeckString($deckCode);
+		return $this->decodeDeckString($deckCode);
 	}
 
-	protected function DecodeDeckString(string $deckCode)
+    /**
+     * Decode deck string
+     *
+     * @param string $deckCode
+     * @return array|null
+     */
+	protected function decodeDeckString(string $deckCode): ?array
 	{
 		//check for prefix
 		if (substr($deckCode, 0, strlen($this->sm_rgchEncodedPrefix)) != $this->sm_rgchEncodedPrefix) {
@@ -62,7 +68,7 @@ class ArtifactDeckDecoder
 	}
 
 	//reads out a var-int encoded block of bits, returns true if another chunk should follow
-	protected function ReadBitsChunk($nChunk, $nNumBits, $nCurrShift, &$nOutBits)
+	protected function readBitsChunk($nChunk, $nNumBits, $nCurrShift, &$nOutBits)
 	{
 		$nContinueBit = (1 << $nNumBits);
 		$nNewBits = $nChunk & ($nContinueBit - 1);
@@ -71,12 +77,12 @@ class ArtifactDeckDecoder
 		return ($nChunk & $nContinueBit) != 0;
 	}
 
-	protected function ReadVarEncodedUint32($nBaseValue, $nBaseBits, $data, &$indexStart, $indexEnd, &$outValue): bool
+	protected function readVarEncodedUint32($nBaseValue, $nBaseBits, $data, &$indexStart, $indexEnd, &$outValue): bool
 	{
 		$outValue = 0;
 
 		$nDeltaShift = 0;
-		if (($nBaseBits == 0) || $this->ReadBitsChunk($nBaseValue, $nBaseBits, $nDeltaShift, $outValue)) {
+		if (($nBaseBits == 0) || $this->readBitsChunk($nBaseValue, $nBaseBits, $nDeltaShift, $outValue)) {
 			$nDeltaShift += $nBaseBits;
 
 			while (1) {
@@ -87,7 +93,7 @@ class ArtifactDeckDecoder
 
 				//read the bits from this next byte and see if we are done
 				$nNextByte = $data[$indexStart++];
-				if (!$this->ReadBitsChunk($nNextByte, 7, $nDeltaShift, $outValue)) {
+				if (!$this->readBitsChunk($nNextByte, 7, $nDeltaShift, $outValue)) {
                     break;
                 }
 
@@ -99,7 +105,7 @@ class ArtifactDeckDecoder
 	}
 
 	//handles decoding a card that was serialized
-	protected function ReadSerializedCard($data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID)
+	protected function readSerializedCard($data, &$indexStart, $indexEnd, &$nPrevCardBase, &$nOutCount, &$nOutCardID)
 	{
 		//end of the memory block?
 		if ($indexStart > $indexEnd) {
@@ -113,7 +119,7 @@ class ArtifactDeckDecoder
 
 		//read in the delta, which has 5 bits in the header, then additional bytes while the value is set
 		$nCardDelta = 0;
-		if (!$this->ReadVarEncodedUint32($nHeader, 5, $data, $indexStart, $indexEnd, $nCardDelta)) {
+		if (!$this->readVarEncodedUint32($nHeader, 5, $data, $indexStart, $indexEnd, $nCardDelta)) {
             return null;
         }
 
@@ -121,7 +127,7 @@ class ArtifactDeckDecoder
 
 		//now parse the count if we have an extended count
 		if ($bHasExtendedCount) {
-			if (!$this->ReadVarEncodedUint32(0, 0, $data, $indexStart, $indexEnd, $nOutCount)) {
+			if (!$this->readVarEncodedUint32(0, 0, $data, $indexStart, $indexEnd, $nOutCount)) {
                 return null;
             }
 		} else {
@@ -136,7 +142,7 @@ class ArtifactDeckDecoder
 
 	// $deckBytes will be 1 indexed (due to unpack return value).  If you are using 0 based indexing
 	//	for your byte array, be sure to adjust appropriate below (see // 1 indexed)
-	protected function ParseDeckInternal($deckBytes)
+	protected function parseDeckInternal($deckBytes)
 	{
 		$nCurrentByteIndex = 1;
 		$nTotalBytes = count($deckBytes);
@@ -171,7 +177,7 @@ class ArtifactDeckDecoder
 
 		//read in our hero count (part of the bits are in the version, but we can overflow bits here
 		$nNumHeroes = 0;
-		if (!$this->ReadVarEncodedUint32($nVersionAndHeroes, 3, $deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nNumHeroes)) {
+		if (!$this->readVarEncodedUint32($nVersionAndHeroes, 3, $deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nNumHeroes)) {
             return null;
         }
 
@@ -181,7 +187,7 @@ class ArtifactDeckDecoder
         for ($nCurrHero = 0; $nCurrHero < $nNumHeroes; $nCurrHero++) {
             $nHeroTurn = 0;
             $nHeroCardID = 0;
-            if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nPrevCardBase, $nHeroTurn, $nHeroCardID)) {
+            if (!$this->readSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalCardBytes, $nPrevCardBase, $nHeroTurn, $nHeroCardID)) {
                 return null;
             }
 
@@ -199,7 +205,7 @@ class ArtifactDeckDecoder
 		while ($nCurrentByteIndex <= $nTotalCardBytes) {
 			$nCardCount = 0;
 			$nCardID = 0;
-			if (!$this->ReadSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalBytes, $nPrevCardBase, $nCardCount, $nCardID)) {
+			if (!$this->readSerializedCard($deckBytes, $nCurrentByteIndex, $nTotalBytes, $nPrevCardBase, $nCardCount, $nCardID)) {
                 return null;
             }
 
