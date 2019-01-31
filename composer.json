@@ -1,0 +1,11 @@
+{
+  "name": "valvesoftware/artifact-deck-code",
+  "description": "A library which assists in the encoding and decoding of deck codes.",
+  "type": "library",
+  "authors": [],
+  "autoload": {
+    "psr-4": {
+      "ValveSoftware\\ArtifactDeckCode\\": "src/"
+    }
+  }
+}
