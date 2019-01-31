@@ -1,17 +1,19 @@
 <?php
 
+namespace ValveSoftware\ArtifactDeckCode\Processors;
+
 class ArtifactDeckDecoder
 {
 	const CURRENT_VERSION = 2;
 	private $sm_rgchEncodedPrefix = "ADC";
 
 	// returns ["heroes" => [id, turn], "cards" => [id, count], "name" => name]
-	public function ParseDeck(string $deckCode)
+	public function ParseDeck(string $deckCode): ?array
 	{
 		$deckBytes = $this->DecodeDeckString($deckCode);
 
 		if (!$deckBytes) {
-            return false;
+            return null;
         }
 
 		$deck = $this->ParseDeckInternal($deckBytes);

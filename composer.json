@@ -3,6 +3,9 @@
   "description": "A library which assists in the encoding and decoding of deck codes.",
   "type": "library",
   "authors": [],
+  "require": {
+    "php": ">=7.1"
+  },
   "autoload": {
     "psr-4": {
       "ValveSoftware\\ArtifactDeckCode\\": "src/"

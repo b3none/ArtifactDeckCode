@@ -1,5 +1,7 @@
 <?php
 
+namespace ValveSoftware\ArtifactDeckCode\Processors;
+
 require_once( 'commonutils.php' );
 
 // Basic Deck encoder
@@ -10,10 +12,9 @@ class ArtifactDeckEncoder
 	private static $sm_nMaxBytesForVarUint32 = 5;
 	private static $knHeaderSize = 3;
 
-
 	//expects array("heroes" => array(id, turn), "cards" => array(id, count), "name" => name)
 	//	signature cards for heroes SHOULD NOT be included in "cards"
-	public static function EncodeDeck( $deckContents )
+	public function EncodeDeck(array $deckContents)
 	{
 		if( !$deckContents )
 			return false;
@@ -24,7 +25,6 @@ class ArtifactDeckEncoder
 		$deck_code = CArtifactDeckEncoder::EncodeBytesToString( $bytes );
 		return $deck_code;
 	}
-
 
 	private static function EncodeBytes( $deckContents )
 	{
@@ -243,5 +243,4 @@ class ArtifactDeckEncoder
 
 		return $unChecksum;
 	}
-
 }
