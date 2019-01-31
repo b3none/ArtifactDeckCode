@@ -37,11 +37,22 @@ class Client
      * Parse deck code
      *
      * @param string $deckCode
-     * @return array|bool
+     * @return array|null
      */
-    public function parseDeck(string $deckCode)
+    public function parseDeck(string $deckCode): ?array
     {
         return $this->artifactDeckDecoder->parseDeck($deckCode);
+    }
+
+    /**
+     * Get raw deck bytes from deck code
+     *
+     * @param string $deckCode
+     * @return array|null
+     */
+    public function getRawDeckBytes(string $deckCode): ?array
+    {
+        return $this->artifactDeckDecoder->getRawDeckBytes($deckCode);
     }
 
     public function encodeDeck($deckContents)

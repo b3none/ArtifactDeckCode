@@ -34,7 +34,7 @@ class ArtifactDeckDecoder
      * @param string $deckCode
      * @return array|null
      */
-	public function RawDeckBytes(string $deckCode): ?array 
+	public function getRawDeckBytes(string $deckCode): ?array
 	{
 		return $this->DecodeDeckString($deckCode);
 	}
